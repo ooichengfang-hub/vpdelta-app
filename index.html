@@ -41,7 +41,7 @@
   canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block;cursor:crosshair}
   #tip{position:absolute;left:8px;top:40px;pointer-events:none;font:600 11px/1.45 var(--font);font-variant-numeric:tabular-nums;
     background:rgba(10,10,10,.86);border:1px solid #262626;border-radius:8px;padding:6px 8px;display:none;max-width:62%;white-space:nowrap}
-  #tip .k{color:var(--muted)} #tip .g{color:var(--up)} #tip .p{color:var(--down)} #tip .r{color:#ef4444} #tip .c{color:#38bdf8}
+  #tip .y{color:#facc15} #tip .k{color:var(--muted)} #tip .g{color:var(--up)} #tip .p{color:var(--down)} #tip .r{color:#ef4444} #tip .c{color:#38bdf8}
   #msg{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);color:var(--muted);font:600 13px var(--font);text-align:center;pointer-events:none;padding:0 20px}
   footer{display:flex;gap:10px;align-items:center;padding:4px 8px;border-top:1px solid var(--grid);font:600 10px var(--font);color:var(--muted);white-space:nowrap;overflow:hidden}
   footer .dot{width:7px;height:7px;border-radius:50%;background:#555;flex:none}
@@ -53,6 +53,25 @@
   #info b.g{color:var(--up)} #info b.p{color:var(--down)} #info b.a{color:var(--abs)} #info b.r{color:#ef4444} #info b.c{color:#38bdf8}
   #info p{margin:6px 0}
   #info .close{float:right}
+  #tools{display:flex;align-items:center;gap:4px;padding:5px 6px;border-bottom:1px solid var(--grid);flex-wrap:nowrap}
+  #tools .btn{padding:6px 5px;font-size:11px}
+  #pp-close{min-width:26px}
+  .btn.tg.on{color:var(--text);border-color:#4a4a4a;background:#1c1c1c}
+  #zone-btn.on{color:#facc15;border-color:#6b5a0a;background:#1c1704}
+  .btn.buy{color:var(--up);border-color:#14532d} .btn.sell{color:#ef4444;border-color:#7f1d1d}
+  .btn.buy:active{background:#052e16} .btn.sell:active{background:#2a0808}
+  #pp-btn{display:flex;flex-direction:column;align-items:center;line-height:1.05;padding:3px 4px;border:1px dashed #6b5a0a;background:#120f02;color:#facc15;border-radius:7px;font:800 9.5px var(--font);cursor:pointer}
+  #pp-btn span{font:700 9px var(--font)} #pp-btn .g{color:var(--up)} #pp-btn .r{color:#ef4444}
+  #pp-size{width:44px;background:#0d0d0d;border:1px solid #2a2a2a;color:var(--text);font:700 12px var(--font);padding:6px 5px;border-radius:7px}
+  #toast{position:absolute;left:50%;bottom:14px;transform:translate(-50%,20px);opacity:0;pointer-events:none;transition:all .25s;z-index:6;
+    background:rgba(12,12,12,.95);border:1px solid #333;border-radius:10px;padding:8px 12px;font:600 12.5px/1.4 var(--font);text-align:center;white-space:nowrap}
+  #toast.show{opacity:1;transform:translate(-50%,0)} #toast.buy{border-color:#166534} #toast.sell{border-color:#991b1b} #toast.warn{border-color:#6b5a0a}
+  #toast .g{color:var(--up)} #toast .r{color:#ef4444} #toast .tag,#pp-dlg .tag{color:#facc15;border:1px solid #6b5a0a;border-radius:4px;padding:0 4px;font-size:10px}
+  #zdel{position:absolute;display:none;z-index:4;background:#1c1704;color:#facc15;border:1px solid #6b5a0a;border-radius:7px;font:700 11px var(--font);padding:5px 8px}
+  #pp-dlg{position:absolute;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:5;padding:16px}
+  #pp-dlg .card{max-width:560px;width:100%;max-height:100%;overflow:auto;background:#0b0b0b;border:1px solid #6b5a0a;border-radius:12px;padding:14px 16px;font:500 12.5px/1.45 var(--font)}
+  #pp-dlg table{width:100%;border-collapse:collapse;font-size:11px;font-variant-numeric:tabular-nums} #pp-dlg td{padding:3px 4px;border-top:1px solid #1f1f1f;white-space:nowrap}
+  #pp-dlg .g{color:var(--up)} #pp-dlg .r{color:#ef4444} #pp-dlg .k{color:var(--muted)} #pp-dlg h3{margin:0 0 6px;font-size:15px;color:#facc15}
 </style>
 </head>
 <body>
@@ -68,10 +87,31 @@
     <button class="btn liq on" id="liq-btn" title="Show liquidation markers on candles">LIQ</button>
     <button class="btn" id="info-btn" aria-label="Info">i</button>
   </header>
+  <div id="tools">
+    <button class="btn tg on" id="wick-btn" title="Volume at each candle's high/low tip">WICK</button>
+    <button class="btn tg on" id="book-btn" title="Order book depth on the price axis">BOOK</button>
+    <button class="btn tg" id="zone-btn" title="Drag on the chart to draw a zone">ZONE</button>
+    <div class="grow"></div>
+    <button id="pp-btn" title="Paper trading history (simulated)">PAPER<span id="pp-tot">+$0.00</span></button>
+    <input id="pp-size" value="0.01" inputmode="decimal" autocomplete="off" aria-label="Paper order size">
+    <button class="btn" id="pp-unit" title="Size unit">BTC</button>
+    <button class="btn buy" id="pp-long">LONG</button>
+    <button class="btn sell" id="pp-short">SHORT</button>
+    <button class="btn" id="pp-close" title="Close paper position">✕</button>
+  </div>
   <div id="wrap">
     <canvas id="cv"></canvas>
     <div id="tip"></div>
     <div id="msg">Loading…</div>
+    <div id="toast"></div>
+    <button id="zdel">Delete zone</button>
+    <div id="pp-dlg"><div class="card">
+      <button class="btn" style="float:right" id="pp-dlg-close">Close</button>
+      <h3>PAPER trading <span class="tag">SIMULATED</span></h3>
+      <p class="k">Practice only. Nothing is sent to any exchange, no account and no keys are used. Fills at the live Binance price.</p>
+      <div id="pp-body"></div>
+      <p><button class="btn" id="pp-reset">Reset paper history</button></p>
+    </div></div>
     <div id="info"><div class="card">
       <button class="btn close" id="info-close">Close</button>
       <h3>Volume + Delta profile</h3>
@@ -83,6 +123,11 @@
       <p>The countdown under the last-price tag is the time left until the current candle closes, synced to Binance server time.</p>
       <p>Profiles cover only the candles currently on screen and update when you zoom or pan.</p>
       <p><b class="a">ABS</b> (heuristic, not a signal): flags a price bin that is a high-volume node (top 20%) with strongly negative delta (bottom 15%) where a candle's low printed and the next 5 candles made no lower low — i.e. selling that may have been absorbed.</p>
+      <p><b>WICK</b> bubbles = volume traded at the tip of a candle: the top 10% of its high–low range (<b class="g">green, at the high</b>) and the bottom 10% (<b class="r">red, at the low</b>). Colour shows position, not delta; tap the candle to see that tip's buy/sell delta. Numbers are in the base coin (e.g. BTC for BTCUSDT): 139 = 139 BTC. A thick, bright ring = <b>heavy</b>: more than 2× the average tip volume on screen, a hint of absorption. Bubbles show only on swing highs/lows (±2 candles) and heavy tips to stay readable.</p>
+      <p>How it is computed: exact from Binance public <i>aggTrades</i> (each trade's price, size and aggressor side), live from the aggTrade stream plus a REST back-fill of the most recent candles (about 30 on 1m, the latest few on higher timeframes). Older 5m/15m/1h candles use an <i>estimate</i> from 1m candles (dashed ring). Older 1m candles without trade data get no bubble.</p>
+      <p><b>BOOK</b> = current order book on the price axis: <b class="g">green bids</b>, <b class="r">red asks</b>, summed into the chart's price bins (Binance REST depth, 1000 levels every 5 s, plus the live top-20 stream). Only shows resting limit orders right now, which can be pulled at any time.</p>
+      <p><b>ZONE</b>: tap ZONE, then drag on the chart to draw a box. Tap a zone to select it and delete it. Zones are saved per symbol on this device.</p>
+      <p><b style="color:#facc15">PAPER trading — simulated only.</b> LONG/SHORT opens a practice position at the live price (size in the coin or USDT). Default stop-loss 0.25% and take-profit 0.5% away; drag the SL/TP lines to move them. They close the position automatically when the live price touches them (after reopening the app, missed hits are checked from the chart's candles; if both were touched in one candle, the stop is assumed first). PnL is in USDT and includes a 0.05% taker fee on entry and exit. One position per symbol. History and total are kept on this device. No real orders are ever sent.</p>
       <p>Controls: drag to pan, pinch / scroll to zoom, tap (or hover) for candle and price-level details.</p>
       <p>Data: Binance public market data (USDT-M futures; spot only as fallback). No account, no keys. Times in Asia/Kuala_Lumpur (UTC+8). Not financial advice.</p>
     </div></div>
@@ -241,7 +286,130 @@ var VPCore = (function () {
     var p2 = function (x) { return (x < 10 ? '0' : '') + x; };
     return ivMs >= 3600e3 ? p2(h) + ':' + p2(m) + ':' + p2(sec) : p2(h * 60 + m) + ':' + p2(sec);
   }
-  return { parseForceOrder: parseForceOrder, liqProfile: liqProfile, pruneLiqs: pruneLiqs, candleCountdown: candleCountdown, fmtCountdown: fmtCountdown,
+  // ---------- order flow: wick (tip) volume from aggTrades ----------
+  // Price quantum used to bucket trades (≈ 5 significant digits: BTC 0.1, ETH 0.01).
+  function priceQuantum(p) { return p > 0 ? Math.pow(10, Math.floor(Math.log10(p)) - 5) : 1; }
+  function newTradeHist() { return { m: {}, last: null, ok: false, n: 0 }; }
+  // aggTrade m=true: buyer is maker, i.e. the aggressor SOLD.
+  function addTrade(h, q, id, price, qty, buyerMaker) {
+    var k = Math.round(price / q), b = h.m[k] || (h.m[k] = [0, 0]);
+    if (buyerMaker) b[1] += qty; else b[0] += qty;
+    h.n++; if (id != null) h.last = id;
+  }
+  // Tip zone height: frac of the candle range, at least minZone, at most half the range.
+  function wickZone(high, low, frac, minZone) {
+    var r = high - low, z = Math.max(r * frac, minZone || 0);
+    return r > 0 ? Math.min(z, r / 2) : (minZone || 0);
+  }
+  function wickVolumes(h, q, high, low, frac, minZone) {
+    var z = wickZone(high, low, frac, minZone), top = { vol: 0, buy: 0, sell: 0 }, bot = { vol: 0, buy: 0, sell: 0 }, eps = q / 2;
+    for (var k in h.m) {
+      var p = k * q, b = h.m[k];
+      if (p >= high - z - eps) { top.buy += b[0]; top.sell += b[1]; }
+      else if (p <= low + z + eps) { bot.buy += b[0]; bot.sell += b[1]; }
+    }
+    top.vol = top.buy + top.sell; bot.vol = bot.buy + bot.sell;
+    top.delta = top.buy - top.sell; bot.delta = bot.buy - bot.sell;
+    return { top: top, bot: bot, zone: z };
+  }
+  // Fallback estimate from lower-timeframe klines: each sub-candle's volume spread uniformly over its own high-low.
+  function wickFromKlines(subs, high, low, frac, minZone) {
+    var z = wickZone(high, low, frac, minZone), top = { vol: 0, buy: 0, sell: 0 }, bot = { vol: 0, buy: 0, sell: 0 };
+    var part = function (k, a, b) {
+      if (k.h > k.l) return overlap(a, b, k.l, k.h) / (k.h - k.l);
+      return k.l >= a && k.l <= b ? 1 : 0;
+    };
+    for (var i = 0; i < subs.length; i++) {
+      var k = subs[i], d = splitDelta(k), ft = part(k, high - z, high), fb = part(k, low, low + z);
+      if (ft + fb > 1) { var s = ft + fb; ft /= s; fb /= s; }
+      top.buy += d.buy * ft; top.sell += d.sell * ft; bot.buy += d.buy * fb; bot.sell += d.sell * fb;
+    }
+    top.vol = top.buy + top.sell; bot.vol = bot.buy + bot.sell;
+    top.delta = top.buy - top.sell; bot.delta = bot.buy - bot.sell;
+    return { top: top, bot: bot, zone: z };
+  }
+  // Swing high/low: candle's high (low) is the extreme within +-n neighbours that exist.
+  function pivotFlags(c, i, n) {
+    var hi = true, lo = true;
+    for (var j = Math.max(0, i - n); j <= Math.min(c.length - 1, i + n); j++) {
+      if (j === i) continue;
+      if (c[j].h > c[i].h) hi = false;
+      if (c[j].l < c[i].l) lo = false;
+    }
+    return { hi: hi, lo: lo };
+  }
+  function heavyThreshold(values, mult) {
+    var s = 0, n = 0;
+    for (var i = 0; i < values.length; i++) if (values[i] > 0) { s += values[i]; n++; }
+    return n >= 3 ? (s / n) * (mult || 2) : Infinity;
+  }
+
+  // ---------- order book ----------
+  // Apply a partial top-N depth snapshot (Binance depth20) onto a fuller book (REST snapshot).
+  function applyDepth(book, bids, asks) {
+    var p, i;
+    if (bids && bids.length) {
+      var minB = Infinity; for (i = 0; i < bids.length; i++) minB = Math.min(minB, +bids[i][0]);
+      book.b.forEach(function (q, px) { if (px >= minB) book.b.delete(px); });
+      for (i = 0; i < bids.length; i++) if (+bids[i][1] > 0) book.b.set(+bids[i][0], +bids[i][1]);
+    }
+    if (asks && asks.length) {
+      var maxA = -Infinity; for (i = 0; i < asks.length; i++) maxA = Math.max(maxA, +asks[i][0]);
+      book.a.forEach(function (q, px) { if (px <= maxA) book.a.delete(px); });
+      for (i = 0; i < asks.length; i++) if (+asks[i][1] > 0) book.a.set(+asks[i][0], +asks[i][1]);
+    }
+    var bb = -Infinity, ba = Infinity;
+    if (bids && bids.length) for (i = 0; i < bids.length; i++) if (+bids[i][1] > 0) bb = Math.max(bb, +bids[i][0]);
+    if (asks && asks.length) for (i = 0; i < asks.length; i++) if (+asks[i][1] > 0) ba = Math.min(ba, +asks[i][0]);
+    if (isFinite(ba)) book.b.forEach(function (q, px) { if (px >= ba) book.b.delete(px); });
+    if (isFinite(bb)) book.a.forEach(function (q, px) { if (px <= bb) book.a.delete(px); });
+    return book;
+  }
+  function bookProfile(book, lo, hi, n) {
+    var step = (hi - lo) / n, bid = new Array(n).fill(0), ask = new Array(n).fill(0);
+    if (!(step > 0)) return { bid: bid, ask: ask };
+    book.b.forEach(function (q, p) { if (p >= lo && p <= hi) bid[binIndex(p, lo, step, n)] += q; });
+    book.a.forEach(function (q, p) { if (p >= lo && p <= hi) ask[binIndex(p, lo, step, n)] += q; });
+    return { bid: bid, ask: ask };
+  }
+
+  // ---------- paper trading math (simulation only) ----------
+  function paperQty(value, unit, price) {
+    var v = +value; if (!(v > 0) || !(price > 0)) return 0;
+    var q = unit === 'USDT' ? v / price : v;
+    return Math.floor(q * 1e6 + 1e-6) / 1e6;
+  }
+  // side +1 long / -1 short; fee = taker rate charged on entry and exit notional.
+  function paperPnl(side, entry, exit, qty, fee) {
+    return side * (exit - entry) * qty - (fee || 0) * (entry + exit) * qty;
+  }
+  function defaultSlTp(side, entry, slPct, tpPct) {
+    return { sl: entry * (1 - side * slPct), tp: entry * (1 + side * tpPct) };
+  }
+  function checkExit(pos, price) {
+    if (!pos || !(price > 0)) return null;
+    if (pos.side > 0) { if (pos.sl && price <= pos.sl) return 'sl'; if (pos.tp && price >= pos.tp) return 'tp'; }
+    else { if (pos.sl && price >= pos.sl) return 'sl'; if (pos.tp && price <= pos.tp) return 'tp'; }
+    return null;
+  }
+  // Candle-range check (catch-up after the app was closed). Both touched in one candle -> assume SL first (conservative).
+  function checkExitRange(pos, low, high) {
+    if (!pos) return null;
+    var slHit = pos.sl && (pos.side > 0 ? low <= pos.sl : high >= pos.sl);
+    var tpHit = pos.tp && (pos.side > 0 ? high >= pos.tp : low <= pos.tp);
+    if (slHit) return { type: 'sl', price: pos.sl };
+    if (tpHit) return { type: 'tp', price: pos.tp };
+    return null;
+  }
+  // Keep a dragged SL/TP on the valid side of the mark price.
+  function clampStop(side, kind, price, mark, gap) {
+    var below = (side > 0) === (kind === 'sl');
+    return below ? Math.min(price, mark - gap) : Math.max(price, mark + gap);
+  }
+  return { priceQuantum: priceQuantum, newTradeHist: newTradeHist, addTrade: addTrade, wickZone: wickZone, wickVolumes: wickVolumes,
+    wickFromKlines: wickFromKlines, pivotFlags: pivotFlags, heavyThreshold: heavyThreshold, applyDepth: applyDepth, bookProfile: bookProfile,
+    paperQty: paperQty, paperPnl: paperPnl, defaultSlTp: defaultSlTp, checkExit: checkExit, checkExitRange: checkExitRange, clampStop: clampStop,
+    parseForceOrder: parseForceOrder, liqProfile: liqProfile, pruneLiqs: pruneLiqs, candleCountdown: candleCountdown, fmtCountdown: fmtCountdown,
     parseKline: parseKline, splitDelta: splitDelta, binWeight: binWeight, buildProfile: buildProfile, poc: poc,
     valueArea: valueArea, quantile: quantile, absorption: absorption, mergeKline: mergeKline, sourceCandles: sourceCandles,
     SUB: SUB, IV_MS: IV_MS };
@@ -263,7 +431,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
   var st = {
     sym: 'BTCUSDT', iv: '1m', src: null, main: [], sub: [], subIv: null, gen: 0,
     barW: 7, ro: 4, abs: false, cross: null, ws: null, wsLast: 0, lastUpd: 0, dirty: true, err: '',
-    offset: 0, offsetSrc: '', liqShow: true, liqWs: null, liqLast: 0, liqOpen: false, lastSec: 0
+    offset: 0, offsetSrc: '', wick: true, book: true, zoneMode: false, lastPrice: 0, lastPriceAt: 0, soft: false, lastDraw: 0, liqShow: true, liqWs: null, liqLast: 0, liqOpen: false, lastSec: 0
   };
   try { var q = new URLSearchParams(location.search); if (q.get('symbol')) st.sym = q.get('symbol').toUpperCase(); if (C.IV_MS[q.get('interval')]) st.iv = q.get('interval'); } catch (e) {}
 
@@ -292,7 +460,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
     var gen = ++st.gen;
     closeWS();
     st.main = []; st.sub = []; st.cross = null; st.err = ''; st.subIv = C.SUB[st.iv] || null;
-    liqWatch(st.sym);
+    liqWatch(st.sym); ofReset(); bookReset(); zLoad(); ppBadge();
     st.barW = window.innerWidth < 700 ? 6 : 8; st.ro = 4;
     msg.textContent = 'Loading ' + st.sym + ' ' + st.iv + '…'; msg.style.display = 'block'; tip.style.display = 'none';
     try { history.replaceState(null, '', location.pathname + '?symbol=' + st.sym + '&interval=' + st.iv); } catch (e) {}
@@ -312,8 +480,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
       msg.style.display = r.m.length ? 'none' : 'block';
       if (!r.m.length) msg.textContent = 'No data for ' + st.sym;
       st.dirty = true;
-      openWS(gen); syncTime();
-      if (st.subIv) return fetchK(r.ep, st.sym, st.subIv, 1500).then(function (s) { if (gen === st.gen) { st.sub = s; st.dirty = true; } }).catch(function () {});
+      openWS(gen); syncTime(); ppCatchUp(); bookSnap();
+      if (st.iv === '15m' || st.iv === '1h') fetchK(r.ep, st.sym, '1m', 1500).then(function (s) { if (gen === st.gen) { OF.m1 = s; st.dirty = true; } }).catch(function () {});
+      if (st.subIv) return fetchK(r.ep, st.sym, st.subIv, 1500).then(function (s) { if (gen === st.gen) { st.sub = s; if (st.subIv === '1m') OF.m1 = s; st.dirty = true; } }).catch(function () {});
     }).catch(function (e) {
       if (gen !== st.gen) return;
       st.err = String(e && e.message || e);
@@ -327,16 +496,22 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
     if (typeof WebSocket === 'undefined') return;
     var s = st.sym.toLowerCase(), streams = [s + '@kline_' + st.iv];
     if (st.subIv) streams.push(s + '@kline_' + st.subIv);
+    if (st.src === 'fapi') streams.push(s + '@aggTrade');
     var ws;
     try { ws = new WebSocket(EP[st.src].ws + streams.join('/')); } catch (e) { return; }
     st.ws = ws;
     ws.onmessage = function (ev) {
       if (gen !== st.gen) return;
       try {
-        var d = JSON.parse(ev.data); var k = d.data && d.data.k; if (!k) return;
+        var d = JSON.parse(ev.data);
+        if (d.data && d.data.e === 'aggTrade') {
+          var x = d.data; st.lastPrice = +x.p; st.lastPriceAt = Date.now(); st.wsLast = Date.now();
+          ofTrade(+x.a, +x.p, +x.q, !!x.m, +x.T); ppTick(+x.p); st.soft = true; return;
+        }
+        var k = d.data && d.data.k; if (!k) return;
         if (!st.offsetSrc && d.data.E) { st.offset = +d.data.E - Date.now(); st.offsetSrc = 'ws'; }
         var kl = { t: +k.t, o: +k.o, h: +k.h, l: +k.l, c: +k.c, v: +k.v, T: +k.T, tb: +k.V };
-        if (k.i === st.iv) C.mergeKline(st.main, kl); else if (k.i === st.subIv && st.sub.length) C.mergeKline(st.sub, kl);
+        if (k.i === st.iv) { C.mergeKline(st.main, kl); if (Date.now() - st.lastPriceAt > 5000) ppTick(kl.c); } else if (k.i === st.subIv && st.sub.length) C.mergeKline(st.sub, kl);
         st.wsLast = Date.now(); st.lastUpd = Date.now(); st.dirty = true;
       } catch (e) {}
     };
@@ -361,7 +536,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
     if (st.subIv && st.sub.length) jobs.push(fetchK(st.src, st.sym, st.subIv, need(st.sub, C.IV_MS[st.subIv])).then(function (rows) {
       if (gen !== st.gen) return; rows.forEach(function (k) { C.mergeKline(st.sub, k); });
     }));
-    Promise.all(jobs).then(function () { if (gen === st.gen) { st.lastUpd = Date.now(); st.dirty = true; } })
+    Promise.all(jobs).then(function () { if (gen === st.gen) { st.lastUpd = Date.now(); st.dirty = true; if (st.main.length) ppTick(st.main[st.main.length - 1].c); } })
       .catch(function () {}).then(function () { polling = false; });
   }
   setInterval(poll, 4000);
@@ -495,6 +670,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
     var lo = Infinity, hi = -Infinity;
     for (var i = iFirst; i <= iLast; i++) { if (st.main[i].l < lo) lo = st.main[i].l; if (st.main[i].h > hi) hi = st.main[i].h; }
     if (!isFinite(lo)) { lo = 0; hi = 1; }
+    var pp0 = typeof PP !== 'undefined' && PP.pos[st.sym];
+    if (pp0 && isFinite(lo)) [pp0.entry].forEach(function (x) { if (x > 0) { lo = Math.min(lo, x); hi = Math.max(hi, x); } });
     if (hi - lo < hi * 1e-5) { hi += hi * 5e-5; lo -= hi * 5e-5; }
     var pad = (hi - lo) * 0.07; lo -= pad; hi += pad;
     var yOf = function (p) { return L.top + (hi - p) / (hi - lo) * L.plotH; };
@@ -563,8 +740,18 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
       var yy = binY(a.bin); ctx.fillStyle = 'rgba(245,158,11,0.16)'; ctx.fillRect(0, yy[0], L.axisX, Math.max(2, yy[1] - yy[0]));
     });
 
-    // candles
+    // candles (+ zones behind them)
     ctx.save(); ctx.beginPath(); ctx.rect(0, L.top - 4, L.chartW, L.plotH + 8); ctx.clip();
+    ZN.list.concat(ZN.tmp ? [ZN.tmp] : []).forEach(function (z) {
+      var r = zRect(z, v), sel = z === ZN.sel || z === ZN.tmp;
+      ctx.fillStyle = sel ? 'rgba(250,204,21,0.24)' : 'rgba(250,204,21,0.15)'; ctx.fillRect(r.x, r.y, r.w, r.h);
+      ctx.strokeStyle = sel ? 'rgba(250,204,21,0.95)' : 'rgba(250,204,21,0.45)'; ctx.lineWidth = sel ? 1.5 : 1; ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+      if (r.w > 70 && r.h > 12) {
+        ctx.font = '700 9px ' + FONT; ctx.fillStyle = 'rgba(250,204,21,0.85)'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.fillText(fp(Math.min(z.p0, z.p1), d) + '–' + fp(Math.max(z.p0, z.p1), d), r.x + 4, r.y + 3);
+      }
+      ctx.lineWidth = 1;
+    });
     var bodyW = Math.max(1, Math.min(st.barW * 0.72, st.barW - 1));
     for (i = v.iFirst; i <= v.iLast; i++) {
       var k = main[i], up = k.c >= k.o, xc = v.xOf(i), col = up ? COL.up : COL.down;
@@ -573,6 +760,37 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
       ctx.fillRect(wx, v.yOf(k.h), 1, Math.max(1, v.yOf(k.l) - v.yOf(k.h)));
       var yT = v.yOf(Math.max(k.o, k.c)), yB = v.yOf(Math.min(k.o, k.c));
       ctx.fillRect(Math.round(xc - bodyW / 2), yT, Math.max(1, Math.round(bodyW)), Math.max(1, yB - yT));
+    }
+    // wick (tip) volume bubbles
+    if (st.wick && st.barW >= 3) {
+      var wl = [], wv = [], i0 = Math.max(v.iFirst, v.iLast - 80);
+      for (i = i0; i <= v.iLast; i++) { var w = wickFor(i); if (w) { wl.push([i, w]); wv.push(w.top.vol, w.bot.vol); } }
+      var heavy = C.heavyThreshold(wv, 2);
+      ctx.font = '800 9px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      var bubble = function (x, y, val, up, hv, est) {
+        var txt = fq(val), bw2 = Math.max(18, ctx.measureText(txt).width + 9), bh = hv ? 15 : 13;
+        ctx.beginPath(); ctx.ellipse(x, y, bw2 / 2, bh / 2, 0, 0, 6.2832);
+        ctx.fillStyle = up ? (hv ? 'rgba(34,197,94,0.5)' : 'rgba(22,101,52,0.55)') : (hv ? 'rgba(239,68,68,0.5)' : 'rgba(127,29,29,0.6)'); ctx.fill();
+        ctx.strokeStyle = up ? (hv ? '#4ade80' : 'rgba(34,197,94,0.75)') : (hv ? '#f87171' : 'rgba(239,68,68,0.75)');
+        ctx.lineWidth = hv ? 2 : 1; if (est) ctx.setLineDash([2, 2]); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1;
+        ctx.fillStyle = '#f5f5f5'; ctx.fillText(txt, x, y + 0.5);
+      };
+      var cand = [];
+      wl.forEach(function (it) {
+        var ii = it[0], w = it[1], k = main[ii], pv = C.pivotFlags(main, ii, 2), x = v.xOf(ii);
+        var ht = w.top.vol >= heavy, hb = w.bot.vol >= heavy;
+        if ((pv.hi || ht) && w.top.vol > 0) cand.push([x, v.yOf(k.h) - 10, w.top.vol, true, ht, w.src === 'est']);
+        if ((pv.lo || hb) && w.bot.vol > 0) cand.push([x, v.yOf(k.l) + 10, w.bot.vol, false, hb, w.src === 'est']);
+      });
+      cand.sort(function (a, b) { return (b[4] - a[4]) || (b[2] - a[2]); });
+      var placed = [];
+      cand.forEach(function (c) {
+        var hw = Math.max(18, ctx.measureText(fq(c[2])).width + 9) / 2 + 1;
+        for (var j = 0; j < placed.length; j++) { var q2 = placed[j]; if (Math.abs(q2[0] - c[0]) < hw + q2[2] && Math.abs(q2[1] - c[1]) < 14) return; }
+        placed.push([c[0], c[1], hw]); bubble(c[0], c[1], c[2], c[3], c[4], c[5]);
+      });
+      ctx.font = '600 8.5px ' + FONT; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#6b6b6b';
+      ctx.fillText('WICK vol in ' + baseAsset() + ' · tip 10% · ' + (OF.filled || wl.some(function (x) { return x[1].src === 'trades'; }) ? 'aggTrades' : 'loading…'), 6, L.top + 10);
     }
     abs.forEach(function (a) {
       var k = main[v.iFirst + a.candle]; var x = v.xOf(v.iFirst + a.candle), y = v.yOf(k.l) + 9;
@@ -643,6 +861,19 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
       line(valP, 'rgba(160,160,170,0.45)', [2, 3], near(valP) ? '' : 'VAL');
     }
 
+    // order book depth on the price axis
+    if (st.book && BOOK.t && BOOK.key === st.sym) {
+      var bp = C.bookProfile(BOOK, v.lo, v.hi, nb), maxB = 0;
+      for (i = 0; i < nb; i++) maxB = Math.max(maxB, bp.bid[i], bp.ask[i]);
+      var bmax = L.axisW + Math.min(46, L.liqW * 0.8), bstep = (v.hi - v.lo) / nb;
+      if (maxB > 0) for (i = 0; i < nb; i++) {
+        var by0 = v.yOf(v.lo + (i + 1) * bstep), bh0 = Math.max(1, v.yOf(v.lo + i * bstep) - by0 - gapPx);
+        if (bp.bid[i] > 0) { ctx.fillStyle = 'rgba(34,197,94,0.42)'; var bl = Math.max(1, bp.bid[i] / maxB * bmax); ctx.fillRect(L.W - bl, by0, bl, bh0); }
+        if (bp.ask[i] > 0) { ctx.fillStyle = 'rgba(239,68,68,0.42)'; var al = Math.max(1, bp.ask[i] / maxB * bmax); ctx.fillRect(L.W - al, by0, al, bh0); }
+      }
+      ctx.font = '700 7.5px ' + FONT; ctx.fillStyle = COL.muted; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('BOOK', L.axisX + L.axisW / 2, 13);
+    }
     // price axis labels
     ctx.font = '600 10.5px ' + FONT; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = COL.muted;
     ticks.forEach(function (p) { var y = v.yOf(p); if (y > L.top + 6 && y < L.top + L.plotH - 6) ctx.fillText(fp(p, d), L.axisX + 6, y); });
@@ -658,6 +889,28 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
     ctx.fillStyle = '#111'; ctx.fillRect(L.axisX + 1, ty + 8, L.axisW - 1, 14);
     ctx.strokeStyle = lc; ctx.strokeRect(L.axisX + 1.5, ty + 8.5, L.axisW - 2, 13);
     ctx.fillStyle = COL.text; ctx.font = '700 9.5px ' + FONT; ctx.fillText(cd, L.axisX + 6, ty + 15.5);
+    // PAPER position: entry, SL, TP
+    var pos = ppPos();
+    if (pos) {
+      var mk = markPrice(), upnl = C.paperPnl(pos.side, pos.entry, mk, pos.qty, PP_FEE);
+      var pline = function (price, color, dash, label, badge, badgeCol, grip) {
+        var yr = v.yOf(price), off = yr < L.top + 8 ? -1 : yr > L.top + L.plotH - 8 ? 1 : 0;
+        var y = Math.round(Math.max(L.top + 8, Math.min(L.top + L.plotH - 8, yr))) + 0.5;
+        if (off) { label += off < 0 ? ' ↑' : ' ↓'; dash = [1, 4]; }
+        ctx.strokeStyle = color; ctx.setLineDash(dash); ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(L.axisX, y); ctx.stroke(); ctx.setLineDash([]); ctx.lineWidth = 1;
+        ctx.font = '800 9.5px ' + FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+        var w1 = ctx.measureText(label).width + 8, w2 = ctx.measureText(badge).width + 8, x0 = 4;
+        ctx.fillStyle = '#0d0d0d'; ctx.fillRect(x0, y - 8, w1, 16); ctx.strokeStyle = color; ctx.strokeRect(x0 + 0.5, y - 7.5, w1 - 1, 15);
+        ctx.fillStyle = color; ctx.fillText(label, x0 + 4, y + 0.5);
+        ctx.fillStyle = badgeCol; ctx.fillRect(x0 + w1, y - 8, w2, 16); ctx.fillStyle = '#000'; ctx.fillText(badge, x0 + w1 + 4, y + 0.5);
+        ctx.fillStyle = color; ctx.fillRect(L.axisX + 1, y - 7, L.axisW - 1, 14); ctx.fillStyle = '#000'; ctx.font = '700 9.5px ' + FONT; ctx.fillText(fp(price, d), L.axisX + 5, y + 0.5);
+        if (grip) { ctx.fillStyle = color; ctx.fillRect(L.chartW - 22, y - 6, 18, 12); ctx.fillStyle = '#000'; ctx.font = '800 9px ' + FONT; ctx.textAlign = 'center'; ctx.fillText('⇅', L.chartW - 13, y + 0.5); }
+      };
+      var slP = C.paperPnl(pos.side, pos.entry, pos.sl, pos.qty, PP_FEE), tpP = C.paperPnl(pos.side, pos.entry, pos.tp, pos.qty, PP_FEE);
+      pline(pos.sl, '#ef4444', [4, 3], 'SL', fsu(slP), '#ef4444', true);
+      pline(pos.tp, '#22c55e', [4, 3], 'TP', fsu(tpP), '#22c55e', true);
+      pline(pos.entry, '#facc15', [], 'PAPER ' + (pos.side > 0 ? 'L +' : 'S -') + fqty(pos.qty), fsu(upnl), upnl >= 0 ? '#22c55e' : '#ef4444', false);
+    }
     // time labels
     ctx.font = '600 10px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = COL.muted;
     var lastX = -1e9;
@@ -700,7 +953,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
 
     // crosshair
     drawCross(v, prof, d, lp, lev);
-    st.dirty = false;
+    zPlaceDel();
+    st.dirty = false; st.soft = false; st.lastDraw = Date.now();
   }
 
   function drawCross(v, prof, d, lp, lev) {
@@ -732,6 +986,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
       var cl = 0, cs = 0;
       for (var q = 0; q < lev.length; q++) { var e = lev[q]; if (e.T >= k.t && e.T < k.t + ivMs) { if (e.side === 'long') cl += e.usd; else cs += e.usd; } }
       html += '<div><span class="k">Liq</span> <span class="r">L ' + fu(cl) + '</span> <span class="c">S ' + fu(cs) + '</span></div>';
+      var wk = st.wick ? wickFor(idx) : null;
+      if (wk) html += '<div><span class="k">Tip vol' + (wk.src === 'est' ? ' (est)' : '') + '</span> <span class="g">▲' + fq(wk.top.vol) + '</span> <span class="k">Δ</span>' + fsv(wk.top.delta) + ' <span class="r">▼' + fq(wk.bot.vol) + '</span> <span class="k">Δ</span>' + fsv(wk.bot.delta) + ' <span class="k">' + baseAsset() + '</span></div>';
     }
     html += '<div style="margin-top:3px;border-top:1px solid #262626;padding-top:3px"><span class="k">@ ' + fp(prof.lo + bi * prof.step, d) + '–' + fp(prof.lo + (bi + 1) * prof.step, d) + '</span></div>' +
       '<div><span class="k">Vol</span> ' + fv(prof.vol[bi]) + ' <span class="k">Δ</span> <span class="' + (prof.delta[bi] >= 0 ? 'g' : 'p') + '">' + fsv(prof.delta[bi]) + '</span></div>' +
@@ -742,12 +998,225 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
 
   function loop() {
     var sec = Math.floor(serverNow() / 1000); if (sec !== st.lastSec) { st.lastSec = sec; st.dirty = true; }
-    if (st.dirty && L.W) draw();
+    if (L.W && (st.dirty || (st.soft && Date.now() - st.lastDraw > 150))) draw();
     var u = document.getElementById('upd'), dot = document.getElementById('dot');
     var live = st.lastUpd && Date.now() - st.lastUpd < 12000 && st.main.length;
     dot.className = 'dot' + (live ? ' live' : '');
     if (st.lastUpd && st.main.length) u.textContent = (st.ws && st.ws.readyState === 1 && Date.now() - st.wsLast < 8000 ? 'WS live' : 'polling 4s') + ' · ' + klTime(st.lastUpd - (st.lastUpd % 1000)) + ':' + pad(new Date(st.lastUpd).getSeconds());
     requestAnimationFrame(loop);
+  }
+
+  // ---------- order flow state: wick volume (aggTrades) ----------
+  var OF = { key: '', iv: 60000, c: new Map(), raw: new Map(), gLast: null, q: 0, budget: 45, busy: false, failed: {}, m1: [], filled: 0 };
+  function ofReset() {
+    OF.key = st.sym + '|' + st.iv; OF.iv = C.IV_MS[st.iv]; OF.c = new Map(); OF.raw = new Map(); OF.gLast = null; OF.q = 0;
+    OF.budget = 45; OF.busy = false; OF.failed = {}; OF.m1 = []; OF.filled = 0;
+  }
+  function ofTrade(a, p, qn, m, T) {
+    if (!OF.q) OF.q = C.priceQuantum(p);
+    if (OF.gLast != null && a <= OF.gLast) return;
+    var contiguous = OF.gLast != null && a === OF.gLast + 1;
+    OF.gLast = a;
+    var t = Math.floor(T / OF.iv) * OF.iv, e = OF.c.get(t);
+    if (!e) { e = C.newTradeHist(); e.ok = contiguous; OF.c.set(t, e); }
+    if (e.ok) {
+      if (e.last == null || a === e.last + 1) { C.addTrade(e, OF.q, a, p, qn, m); return; }
+      if (a <= e.last) return;
+      e.ok = false; e.m = {}; e.n = 0; e.last = null; // gap: drop and refill from REST
+    }
+    var r = OF.raw.get(t); if (!r) OF.raw.set(t, r = []);
+    if (r.length < 40000) r.push([a, p, qn, m]);
+  }
+  function ofPrune() {
+    if (OF.c.size > 600) { var ks = Array.from(OF.c.keys()).sort(function (a, b) { return a - b; }); ks.slice(0, ks.length - 500).forEach(function (k) { OF.c.delete(k); }); }
+    OF.raw.forEach(function (v, k) { if (k < serverNow() - 3 * OF.iv - 60000 && !(OF.c.get(k) && !OF.c.get(k).ok)) OF.raw.delete(k); });
+  }
+  function aggUrl(qs) { return 'https://fapi.binance.com/fapi/v1/aggTrades?symbol=' + st.sym + '&limit=1000&' + qs; }
+  function ofFetchCandle(t) {
+    var key = OF.key, end = t + OF.iv, h = C.newTradeHist(), q = OF.q;
+    var page = function (qs) {
+      if (OF.budget <= 0) return Promise.reject(new Error('budget'));
+      OF.budget--;
+      return getJSON(aggUrl(qs)).then(function (rows) {
+        if (key !== OF.key) throw new Error('stale');
+        if (!q && rows.length) q = OF.q = C.priceQuantum(+rows[0].p);
+        var reachedEnd = false;
+        for (var i = 0; i < rows.length; i++) {
+          var r = rows[i];
+          if (+r.T >= end) { reachedEnd = true; break; }
+          if (h.last != null && +r.a !== h.last + 1) throw new Error('gap');
+          C.addTrade(h, q, +r.a, +r.p, +r.q, r.m);
+        }
+        if (!reachedEnd && rows.length === 1000) return page('fromId=' + (h.last + 1));
+      });
+    };
+    return page('startTime=' + t + '&endTime=' + (end - 1)).then(function () {
+      if (key !== OF.key) return;
+      // live candle: append WS trades that arrived after the REST snapshot
+      var raw = (OF.raw.get(t) || []).filter(function (r) { return h.last == null || r[0] > h.last; }).sort(function (x, y) { return x[0] - y[0]; });
+      for (var i = 0; i < raw.length; i++) {
+        if (h.last != null && raw[i][0] !== h.last + 1) throw new Error('gap');
+        C.addTrade(h, q, raw[i][0], raw[i][1], raw[i][2], raw[i][3]);
+      }
+      h.ok = true; OF.c.set(t, h); OF.raw.delete(t); OF.filled++; st.dirty = true;
+    });
+  }
+  function ofBackfill() {
+    if (OF.busy || !st.wick || st.src !== 'fapi' || !st.main.length || document.hidden) return;
+    var main = st.main, K = st.iv === '1m' ? 30 : 3;
+    for (var i = main.length - 1; i >= Math.max(0, main.length - K); i--) {
+      var t = main[i].t, e = OF.c.get(t);
+      if ((e && e.ok) || OF.failed[t]) continue;
+      if (OF.budget <= 0) return;
+      OF.busy = true;
+      ofFetchCandle(t).catch(function (err) { if (String(err && err.message) !== 'stale') OF.failed[t] = Date.now(); })
+        .then(function () { OF.busy = false; });
+      return;
+    }
+  }
+  setInterval(ofBackfill, 200);
+  setInterval(function () {
+    OF.budget = Math.min(45, OF.budget + 1); ofPrune();
+    for (var t in OF.failed) if (Date.now() - OF.failed[t] > 20000) delete OF.failed[t];
+  }, 4000);
+  function wickFor(i) {
+    var k = st.main[i]; if (!k) return null;
+    var e = OF.c.get(k.t), q = OF.q || C.priceQuantum(k.c), minZ = Math.max(2 * q, k.c * 0.00002);
+    if (e && e.ok && e.n > 0) { var w = C.wickVolumes(e, q, k.h, k.l, 0.1, minZ); w.src = 'trades'; return w; }
+    var ivMs = C.IV_MS[st.iv];
+    if (ivMs > 60000 && OF.m1.length) {
+      var subs = []; for (var j = 0; j < OF.m1.length; j++) { var s = OF.m1[j]; if (s.t >= k.t && s.t < k.t + ivMs) subs.push(s); }
+      if (subs.length) { var w2 = C.wickFromKlines(subs, k.h, k.l, 0.1, minZ); w2.src = 'est'; return w2; }
+    }
+    return null;
+  }
+  function fq(v) { var a = Math.abs(v); return a >= 1e6 ? (a / 1e6).toFixed(1) + 'M' : a >= 1e4 ? (a / 1e3).toFixed(0) + 'K' : a >= 1e3 ? (a / 1e3).toFixed(1) + 'K' : a >= 100 ? a.toFixed(0) : a >= 10 ? a.toFixed(0) : a >= 1 ? a.toFixed(1) : a.toFixed(2); }
+  function baseAsset() { return st.sym.replace(/(USDT|USDC|BUSD)$/, '') || st.sym; }
+
+  // ---------- order book ----------
+  var BOOK = { b: new Map(), a: new Map(), ws: null, t: 0, key: '' };
+  function bookReset() { BOOK.b = new Map(); BOOK.a = new Map(); BOOK.t = 0; BOOK.key = st.sym; if (BOOK.ws) { var w = BOOK.ws; BOOK.ws = null; try { w.close(); } catch (e) {} } }
+  function bookSnap() {
+    if (!st.book || st.src !== 'fapi' || document.hidden || !st.main.length) return;
+    var key = st.sym;
+    getJSON('https://fapi.binance.com/fapi/v1/depth?symbol=' + key + '&limit=1000').then(function (r) {
+      if (BOOK.key !== key) return;
+      var nb = new Map(), na = new Map();
+      r.bids.forEach(function (x) { nb.set(+x[0], +x[1]); }); r.asks.forEach(function (x) { na.set(+x[0], +x[1]); });
+      BOOK.b = nb; BOOK.a = na; BOOK.t = Date.now(); st.soft = true;
+    }).catch(function () {});
+    if (!BOOK.ws) openBookWS();
+  }
+  function openBookWS() {
+    if (typeof WebSocket === 'undefined' || st.src !== 'fapi') return;
+    var key = st.sym, ws;
+    try { ws = new WebSocket('wss://fstream.binance.com/public/stream?streams=' + key.toLowerCase() + '@depth20@500ms'); } catch (e) { return; }
+    BOOK.ws = ws;
+    ws.onmessage = function (ev) {
+      if (BOOK.key !== key || !st.book) return;
+      try { var d = JSON.parse(ev.data).data; if (d && BOOK.t) { C.applyDepth(BOOK, d.b, d.a); BOOK.wsT = Date.now(); st.soft = true; } } catch (e) {}
+    };
+    ws.onclose = function () { if (BOOK.ws === ws) BOOK.ws = null; };
+    ws.onerror = function () { try { ws.close(); } catch (e) {} };
+  }
+  setInterval(bookSnap, 5000);
+
+  // ---------- zones (per symbol, localStorage) ----------
+  var ZN = { list: [], sel: null, tmp: null };
+  var zdel = document.getElementById('zdel');
+  function zLoad() { ZN.list = lsGet('vpzone:' + st.sym) || []; ZN.sel = null; zdel.style.display = 'none'; }
+  function zSave() { lsSet('vpzone:' + st.sym, ZN.list); }
+  function xOfT(t) { var m = st.main, iv = C.IV_MS[st.iv], f = (t - m[0].t) / iv - 0.5; return L.chartW - (m.length - 1 - f + st.ro + 0.5) * st.barW; }
+  function tOfX(x) { var m = st.main, iv = C.IV_MS[st.iv], f = m.length - 1 + st.ro + 0.5 - (L.chartW - x) / st.barW; return m[0].t + (f + 0.5) * iv; }
+  function zRect(z, v) {
+    var x0 = xOfT(Math.min(z.t0, z.t1)), x1 = xOfT(Math.max(z.t0, z.t1)), y0 = v.yOf(Math.max(z.p0, z.p1)), y1 = v.yOf(Math.min(z.p0, z.p1));
+    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+  }
+  function zHit(p) {
+    if (!lastFrame) return null;
+    for (var i = ZN.list.length - 1; i >= 0; i--) { var r = zRect(ZN.list[i], lastFrame.v); if (p.x >= r.x - 4 && p.x <= r.x + r.w + 4 && p.y >= r.y - 4 && p.y <= r.y + r.h + 4) return ZN.list[i]; }
+    return null;
+  }
+  function zPlaceDel() {
+    if (!ZN.sel || !lastFrame) { zdel.style.display = 'none'; return; }
+    var r = zRect(ZN.sel, lastFrame.v);
+    zdel.style.display = 'block';
+    zdel.style.left = Math.max(4, Math.min(L.chartW - 70, r.x + r.w - 66)) + 'px';
+    zdel.style.top = Math.max(L.top + 2, Math.min(L.top + L.plotH - 28, r.y - 30)) + 'px';
+  }
+  zdel.addEventListener('click', function () {
+    if (!ZN.sel) return;
+    ZN.list = ZN.list.filter(function (z) { return z !== ZN.sel; }); ZN.sel = null; zSave(); zdel.style.display = 'none'; st.dirty = true;
+  });
+
+  // ---------- PAPER trading (simulation only: never sends orders, no keys) ----------
+  var PP_FEE = 0.0005, PP_SL = 0.0025, PP_TP = 0.005;
+  var PP = lsGet('vppaper') || { pos: {}, hist: [], total: 0 };
+  if (!PP.pos) PP.pos = {}; if (!PP.hist) PP.hist = [];
+  var ppUnit = lsGet('vppaper:unit') || 'BASE';
+  var toastEl = document.getElementById('toast'), toastT = 0;
+  function toast(html, cls) {
+    toastEl.innerHTML = html; toastEl.className = 'show ' + (cls || '');
+    clearTimeout(toastT); toastT = setTimeout(function () { toastEl.className = ''; }, 3200);
+  }
+  function ppSave() { lsSet('vppaper', PP); }
+  function markPrice() { return st.lastPrice && Date.now() - st.lastPriceAt < 15000 ? st.lastPrice : (st.main.length ? st.main[st.main.length - 1].c : 0); }
+  function fsu(v) { return (v >= 0 ? '+' : '-') + '$' + Math.abs(v).toFixed(2); }
+  function fqty(q) { return String(+q.toFixed(6)); }
+  function ppPos() { return PP.pos[st.sym] || null; }
+  function ppOpen(side) {
+    if (!st.main.length) return;
+    if (ppPos()) { toast('PAPER: close the open ' + st.sym + ' position first', 'warn'); return; }
+    var px = markPrice(), qty = C.paperQty(document.getElementById('pp-size').value, ppUnit === 'USDT' ? 'USDT' : 'BASE', px);
+    if (!(qty > 0)) { toast('PAPER: enter a size', 'warn'); return; }
+    var s = C.defaultSlTp(side, px, PP_SL, PP_TP);
+    PP.pos[st.sym] = { sym: st.sym, side: side, qty: qty, entry: px, t: serverNow(), sl: s.sl, tp: s.tp, checkedT: serverNow() };
+    ppSave(); st.dirty = true;
+    var d = dec(px);
+    toast('<b>Order filled</b> <span class="tag">PAPER</span><br>' + (side > 0 ? '<span class="g">LONG +' : '<span class="r">SHORT -') + fqty(qty) + ' ' + baseAsset() + '</span> @ ' + fp(px, d), side > 0 ? 'buy' : 'sell');
+  }
+  function ppClose(reason, px) {
+    var pos = ppPos(); if (!pos) { toast('PAPER: no open ' + st.sym + ' position', 'warn'); return; }
+    px = px || markPrice();
+    var pnl = C.paperPnl(pos.side, pos.entry, px, pos.qty, PP_FEE);
+    PP.hist.unshift({ sym: pos.sym, side: pos.side, qty: pos.qty, entry: pos.entry, exit: px, pnl: pnl, reason: reason, t0: pos.t, t1: serverNow() });
+    PP.hist = PP.hist.slice(0, 200); PP.total = (PP.total || 0) + pnl; delete PP.pos[st.sym]; ppSave(); ppBadge(); st.dirty = true;
+    var what = reason === 'sl' ? 'Stop loss hit' : reason === 'tp' ? 'Take profit hit' : 'Position closed';
+    toast('<b>' + what + '</b> <span class="tag">PAPER</span><br>Realized <span class="' + (pnl >= 0 ? 'g' : 'r') + '">' + fsu(pnl) + '</span> @ ' + fp(px, dec(px)), pnl >= 0 ? 'buy' : 'sell');
+  }
+  var ppSavedAt = 0;
+  function ppTick(price) {
+    var pos = ppPos(); if (!pos) return;
+    var r = C.checkExit(pos, price);
+    if (r) { ppClose(r, price); return; }
+    pos.checkedT = serverNow();
+    if (Date.now() - ppSavedAt > 5000) { ppSavedAt = Date.now(); ppSave(); }
+  }
+  // After reopening: replay the chart's candles that started after the last check.
+  function ppCatchUp() {
+    var pos = ppPos(); if (!pos || !st.main.length) return;
+    for (var i = 0; i < st.main.length; i++) {
+      var k = st.main[i]; if (k.t < pos.checkedT) continue;
+      var r = C.checkExitRange(pos, k.l, k.h);
+      if (r) { ppClose(r.type, r.price); return; }
+    }
+  }
+  function ppBadge() {
+    var tot = PP.total || 0;
+    document.getElementById('pp-tot').textContent = fsu(tot);
+    document.getElementById('pp-tot').className = tot >= 0 ? 'g' : 'r';
+    document.getElementById('pp-unit').textContent = ppUnit === 'USDT' ? 'USDT' : baseAsset();
+  }
+  function ppHistory() {
+    var rows = PP.hist.slice(0, 40).map(function (h) {
+      return '<tr><td>' + klDate(h.t1) + ' ' + klTime(h.t1) + '</td><td>' + h.sym.replace(/USDT$/, '') + '</td><td class="' + (h.side > 0 ? 'g' : 'r') + '">' + (h.side > 0 ? 'L +' : 'S -') + fqty(h.qty) + '</td><td>' + fp(h.entry, dec(h.entry)) + ' → ' + fp(h.exit, dec(h.exit)) + '</td><td>' + h.reason.toUpperCase() + '</td><td class="' + (h.pnl >= 0 ? 'g' : 'r') + '">' + fsu(h.pnl) + '</td></tr>';
+    }).join('');
+    var open = Object.keys(PP.pos).map(function (s) { var p = PP.pos[s]; return s + ' ' + (p.side > 0 ? 'L +' : 'S -') + fqty(p.qty) + ' @ ' + fp(p.entry, dec(p.entry)); }).join(', ');
+    document.getElementById('pp-body').innerHTML =
+      '<p>Total realized: <b class="' + ((PP.total || 0) >= 0 ? 'g' : 'r') + '">' + fsu(PP.total || 0) + '</b> · ' + PP.hist.length + ' trades · fee 0.05% taker per side included</p>' +
+      (open ? '<p>Open: ' + open + '</p>' : '') +
+      (rows ? '<table>' + rows + '</table>' : '<p class="k">No paper trades yet.</p>');
+    document.getElementById('pp-dlg').style.display = 'flex';
   }
 
   // ---------- input ----------
@@ -761,8 +1230,16 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
   cv.addEventListener('pointerdown', function (e) {
     cv.setPointerCapture(e.pointerId);
     var p = local(e); ptrs.set(e.pointerId, p);
-    if (ptrs.size === 1) gesture = { type: 'pan', sx: p.x, sy: p.y, lx: p.x, t: Date.now(), moved: false, mouse: e.pointerType === 'mouse' };
-    else if (ptrs.size === 2) {
+    if (ptrs.size === 1) {
+      var sk = stopHit(p);
+      if (sk) gesture = { type: 'stop', kind: sk, moved: true };
+      else if (st.zoneMode && lastFrame && p.x < L.chartW && p.y > L.top && p.y < L.top + L.plotH) {
+        var pr = lastFrame.v.pOf(p.y), tt = tOfX(p.x);
+        ZN.tmp = { id: Date.now(), t0: tt, t1: tt, p0: pr, p1: pr };
+        gesture = { type: 'zone', sx: p.x, sy: p.y, moved: false };
+      } else gesture = { type: 'pan', sx: p.x, sy: p.y, lx: p.x, t: Date.now(), moved: false, mouse: e.pointerType === 'mouse' };
+    } else if (ptrs.size === 2) {
+      ZN.tmp = null;
       var a = Array.from(ptrs.values());
       gesture = { type: 'pinch', d: Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y), mx: (a[0].x + a[1].x) / 2, moved: true };
     }
@@ -775,6 +1252,17 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
     }
     ptrs.set(e.pointerId, p);
     if (!gesture) return;
+    if (gesture.type === 'stop' && ptrs.size === 1 && lastFrame) {
+      var pos = ppPos(); if (!pos) return;
+      var mk = markPrice();
+      pos[gesture.kind] = C.clampStop(pos.side, gesture.kind, lastFrame.v.pOf(Math.max(L.top, Math.min(L.top + L.plotH, p.y))), mk, mk * 0.0002);
+      st.dirty = true; return;
+    }
+    if (gesture.type === 'zone' && ptrs.size === 1 && ZN.tmp && lastFrame) {
+      if (Math.hypot(p.x - gesture.sx, p.y - gesture.sy) > 6) gesture.moved = true;
+      ZN.tmp.t1 = tOfX(Math.max(0, Math.min(L.chartW, p.x))); ZN.tmp.p1 = lastFrame.v.pOf(Math.max(L.top, Math.min(L.top + L.plotH, p.y)));
+      st.dirty = true; return;
+    }
     if (gesture.type === 'pan' && ptrs.size === 1) {
       if (!gesture.moved && Math.hypot(p.x - gesture.sx, p.y - gesture.sy) < 6) return;
       if (!gesture.moved && !gesture.mouse) st.cross = null;
@@ -791,12 +1279,30 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
   });
   function up(e) {
     var p = local(e);
-    if (gesture && gesture.type === 'pan' && !gesture.moved && !gesture.mouse && Date.now() - gesture.t < 500) {
-      st.cross = (p.x > L.axisX || p.y > L.top + L.plotH + 2) ? null : p; st.dirty = true;
+    if (gesture && gesture.type === 'stop') {
+      ppSave(); var ps = ppPos();
+      if (ps) toast('PAPER ' + gesture.kind.toUpperCase() + ' moved to ' + fp(ps[gesture.kind], dec(ps[gesture.kind])));
+    } else if (gesture && gesture.type === 'zone') {
+      var z = ZN.tmp; ZN.tmp = null;
+      if (z && gesture.moved && Math.abs(xOfT(z.t1) - xOfT(z.t0)) > 8 && lastFrame && Math.abs(lastFrame.v.yOf(z.p1) - lastFrame.v.yOf(z.p0)) > 5) {
+        ZN.list.push(z); zSave(); ZN.sel = z;
+      }
+      st.zoneMode = false; document.getElementById('zone-btn').classList.remove('on'); st.dirty = true;
+    } else if (gesture && gesture.type === 'pan' && !gesture.moved && Date.now() - gesture.t < 500) {
+      var zh = zHit(p);
+      if (zh) { ZN.sel = zh === ZN.sel ? null : zh; st.cross = null; }
+      else { ZN.sel = null; if (!gesture.mouse) st.cross = (p.x > L.axisX || p.y > L.top + L.plotH + 2) ? null : p; }
+      st.dirty = true;
     }
     ptrs.delete(e.pointerId);
     if (ptrs.size === 0) gesture = null;
     else if (ptrs.size === 1) { var q = Array.from(ptrs.values())[0]; gesture = { type: 'pan', sx: q.x, sy: q.y, lx: q.x, t: 0, moved: true }; }
+  }
+  function stopHit(p) {
+    var pos = ppPos(); if (!pos || !lastFrame) return null;
+    var best = null, bd = 16;
+    ['sl', 'tp'].forEach(function (k) { var yk = Math.max(L.top + 8, Math.min(L.top + L.plotH - 8, lastFrame.v.yOf(pos[k]))), dy = Math.abs(yk - p.y); if (dy < bd && p.x <= L.W) { bd = dy; best = k; } });
+    return best;
   }
   cv.addEventListener('pointerup', up);
   cv.addEventListener('pointercancel', up);
@@ -831,6 +1337,24 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
   symEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') setSym(); });
   document.getElementById('abs-btn').addEventListener('click', function () { st.abs = !st.abs; this.classList.toggle('on', st.abs); st.dirty = true; });
   document.getElementById('liq-btn').addEventListener('click', function () { st.liqShow = !st.liqShow; this.classList.toggle('on', st.liqShow); st.dirty = true; });
+  document.getElementById('wick-btn').addEventListener('click', function () { st.wick = !st.wick; this.classList.toggle('on', st.wick); st.dirty = true; });
+  document.getElementById('book-btn').addEventListener('click', function () { st.book = !st.book; this.classList.toggle('on', st.book); if (st.book) bookSnap(); st.dirty = true; });
+  document.getElementById('zone-btn').addEventListener('click', function () { st.zoneMode = !st.zoneMode; this.classList.toggle('on', st.zoneMode); if (st.zoneMode) toast('Drag on the chart to draw a zone'); });
+  document.getElementById('pp-long').addEventListener('click', function () { ppOpen(1); });
+  document.getElementById('pp-short').addEventListener('click', function () { ppOpen(-1); });
+  document.getElementById('pp-close').addEventListener('click', function () { ppClose('manual'); });
+  document.getElementById('pp-unit').addEventListener('click', function () {
+    var px = markPrice(), el = document.getElementById('pp-size'), v0 = +el.value;
+    ppUnit = ppUnit === 'USDT' ? 'BASE' : 'USDT'; lsSet('vppaper:unit', ppUnit);
+    if (v0 > 0 && px > 0) el.value = ppUnit === 'USDT' ? String(Math.round(v0 * px)) : String(+(v0 / px).toFixed(4));
+    ppBadge();
+  });
+  document.getElementById('pp-btn').addEventListener('click', ppHistory);
+  document.getElementById('pp-dlg-close').addEventListener('click', function () { document.getElementById('pp-dlg').style.display = 'none'; });
+  document.getElementById('pp-reset').addEventListener('click', function () {
+    if (!confirm('Reset paper trade history and total? Open paper positions stay.')) return;
+    PP.hist = []; PP.total = 0; ppSave(); ppBadge(); ppHistory();
+  });
   var info = document.getElementById('info');
   document.getElementById('info-btn').addEventListener('click', function () { info.style.display = 'flex'; });
   document.getElementById('info-close').addEventListener('click', function () { info.style.display = 'none'; });
@@ -839,7 +1363,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = VPCore;
   window.addEventListener('orientationchange', function () { setTimeout(resize, 250); });
 
   resize(); load(); openLiqWS(); requestAnimationFrame(loop);
-  window.__vp = st; window.__liq = liq;
+  window.__vp = st; window.__liq = liq; window.__of = OF; window.__book = BOOK; window.__pp = PP; window.__zn = ZN;
   if ('serviceWorker' in navigator && location.protocol === 'https:') { navigator.serviceWorker.register('sw.js').catch(function () {}); } // debug handle for tests/screenshots
 })();
 </script>
